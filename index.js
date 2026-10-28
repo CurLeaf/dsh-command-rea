@@ -1,41 +1,94 @@
 import { randomUUID } from 'node:crypto'
 
 /**
- * `/rea <target or question>` — hand the request to the agent as a normal user
- * message that explicitly asks for the reverse-engineer-anything skill and the
- * REA MCP tools. The command result itself stays out of model history.
+ * `/rea <target or question>` — hand one reverse-engineering request to the
+ * agent as an ordinary user message that asks for the
+ * `reverse-engineer-anything` skill and its REA MCP tools. The command result
+ * itself stays out of model history, like every other slash command.
+ *
+ * The plugin imports nothing from `@deepseek-ai/*` on purpose: a `link:` install
+ * is evaluated from its checkout, outside the profile directory, where the
+ * launcher's bare-specifier routing does not apply. Every framework value this
+ * command needs is therefore mirrored below, so it loads the same way from a
+ * checkout and from a published package.
  */
 export const name = 'command-rea'
 export const inject = ['commands']
 
+/** Stable definition identity, the runtime value of `CommandDefinitionId(id)`. */
+const DEFINITION_ID = 'dsh-command-rea'
+
 const USAGE = '用法：/rea <目标路径或问题>'
+
+/** The skill that owns the REA workflow, named exactly as in its catalog. */
+const SKILL = 'reverse-engineer-anything'
+
+/** Deep-freeze one value in place, the way a published message is frozen. */
+function deepFreeze(value) {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value
+  Object.freeze(value)
+  for (const child of Object.values(value)) deepFreeze(child)
+  return value
+}
+
+/**
+ * Same message the framework's `createUserMessage()` publishes: a detached
+ * clone with a fresh identity, the fixed `user` role and an ordinary user
+ * source, deep-frozen before it reaches the agent.
+ * @param {{ content: readonly object[], source: { kind: 'user' } }} input - content and producer source.
+ * @returns {object} an immutable user message.
+ */
+function createUserMessage(input) {
+  return deepFreeze(structuredClone({
+    ...input,
+    id: randomUUID(),
+    role: 'user',
+  }))
+}
+
+/**
+ * The prompt one invocation injects: plain user text with the task last, so
+ * the turn reads in history like any other human request.
+ * @param {string} task - the trimmed request.
+ * @param {number} attachmentCount - admitted composer attachments.
+ * @returns {string} the model-facing prompt.
+ */
+function composePrompt(task, attachmentCount) {
+  const lines = [
+    `请加载 ${SKILL} 技能，并按它的流程用 REA 完成下面的任务。`,
+    '',
+    `任务：${task}`,
+  ]
+  if (attachmentCount > 0) {
+    lines.push('', `任务目标见随附的 ${attachmentCount} 个附件。`)
+  }
+  return lines.join('\n')
+}
 
 export function apply(ctx) {
   ctx.effect(function* () {
     yield ctx.commands.register({
+      definitionId: DEFINITION_ID,
       name: 'rea',
-      description: '用 REA 逆向分析目标（/rea <路径或问题>）',
-      input: { hint: '<目标路径或问题>' },
-      handler: ({ agent, rawInput }) => {
+      description: '用 REA 逆向分析目标',
+      // Free-form request, optionally accompanied by the targets it names.
+      input: { hint: '<目标路径或问题>', attachments: true },
+      handler: ({ agent, rawInput, attachments }) => {
         const task = rawInput.trim()
         if (task.length === 0) return { kind: 'error', text: USAGE }
 
-        // Same shape and immutability createUserMessage() produces: identified,
-        // role-tagged user message with user source. followup() starts or queues
-        // a normal turn.
-        const block = Object.freeze({
-          type: 'text',
-          text: `请先加载 reverse-engineer-anything skill，然后使用 REA 完成以下任务：\n\n${task}`,
-        })
-        const message = Object.freeze({
-          id: randomUUID(),
-          role: 'user',
-          content: Object.freeze([block]),
-          source: Object.freeze({ kind: 'user' }),
-        })
-        agent.followup(message)
+        // One identified, frozen user message published through followup(), the
+        // same injection other commands use; the command itself never becomes
+        // a model message.
+        agent.followup(createUserMessage({
+          content: [
+            ...attachments,
+            { type: 'text', text: composePrompt(task, attachments.length) },
+          ],
+          source: { kind: 'user' },
+        }))
 
-        return { kind: 'success', text: `已提交给 REA：${task}` }
+        return { kind: 'success', text: `已交给 REA：${task}` }
       },
     })
   }, 'command-rea lifecycle')

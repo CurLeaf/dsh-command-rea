@@ -7,9 +7,53 @@ menu.
 /rea 分析 /opt/app/resources/app.asar
 ```
 
-It appends a normal user message asking the agent to load the
-`reverse-engineer-anything` skill and use the REA MCP tools. The command result
-is rendered outside model history, like other slash commands.
+The command injects one ordinary user message — the same way the built-in
+commands do, through `createUserMessage()` semantics and `agent.followup()` —
+asking the agent to load the `reverse-engineer-anything` skill and run the
+request with the REA MCP tools:
+
+```
+请加载 reverse-engineer-anything 技能，并按它的流程用 REA 完成下面的任务。
+
+任务：分析 /opt/app/resources/app.asar
+```
+
+Composer attachments (`input.attachments`) are admitted and published ahead of
+that text, so a binary, an archive, or a screenshot can be handed to REA
+directly. The command result is rendered outside model history, like other slash
+commands.
+
+### Why the plugin imports nothing from `@deepseek-ai/*`
+
+A `link:` install is evaluated from its checkout, outside the profile directory,
+and the launcher only routes bare `@deepseek-ai/*` specifiers for importers
+inside the profile (or the installation). Importing `createUserMessage` from
+`@deepseek-ai/dsh-llm` therefore fails at boot with `ERR_MODULE_NOT_FOUND` when
+the package is linked, which takes the whole `/rea` row down:
+
+```
+command-rea (dsh-command-rea): failed to import: Cannot find package '@deepseek-ai/dsh-commands'
+```
+
+The plugin therefore mirrors the two framework values it needs — an equivalent
+`createUserMessage()` (fresh identity, `user` role, user source, deep-frozen) and
+the identity string of `CommandDefinitionId` — and imports only `node:crypto`.
+That keeps checkout and registry installs loading identically.
+
+
+## Command surface
+
+| Field | Value |
+|---|---|
+| name | `rea` |
+| definitionId | `dsh-command-rea` |
+| description | 用 REA 逆向分析目标 |
+| input hint | `<目标路径或问题>` |
+| attachments | accepted |
+
+The menu row shows the catalog description and the `rea` name; first-party
+localized titles and glyphs are chosen by the client for its own definition ids,
+so a third-party host command gets neither.
 
 ## Install
 
@@ -26,8 +70,9 @@ through `~/.dsh/profiles/web/package.json` → `dsh.profile.bundles`. Nothing ha
 to be added to `cordis.patch.yml`; an older manual `command-rea` row must be
 removed first, otherwise the same id would be inserted twice.
 
-New bundles are composed into a running profile by HMR; if the row does not
-appear, restart the web service once:
+The web profile's HMR watches profile configuration only, not linked module
+roots, so a code change in a linked checkout needs one restart of the web
+service:
 
 ```bash
 systemctl --user restart dsh-web.service

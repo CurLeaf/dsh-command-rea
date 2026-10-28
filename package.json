@@ -1,7 +1,7 @@
 {
   "name": "dsh-command-rea",
   "version": "0.1.0",
-  "description": "DSH slash command /rea: hand the request to the reverse-engineer-anything skill and REA MCP tools",
+  "description": "DSH slash command /rea: hand a reverse-engineering request to the reverse-engineer-anything skill and the REA MCP tools",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -14,6 +14,9 @@
     "README.md",
     "LICENSE"
   ],
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "license": "MIT",
   "author": "curleaf",
   "keywords": [
