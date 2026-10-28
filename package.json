@@ -1,0 +1,35 @@
+{
+  "name": "dsh-command-rea",
+  "version": "0.1.0",
+  "description": "DSH slash command /rea: hand the request to the reverse-engineer-anything skill and REA MCP tools",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": "curleaf",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "rea",
+    "slash-command",
+    "reverse-engineering"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
