@@ -1,6 +1,6 @@
 {
   "name": "dsh-command-rea",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH slash command /rea: hand a reverse-engineering request to the reverse-engineer-anything skill and the REA MCP tools",
   "type": "module",
   "main": "index.js",
@@ -19,6 +19,14 @@
   },
   "license": "MIT",
   "author": "curleaf",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CurLeaf/dsh-command-rea.git"
+  },
+  "homepage": "https://github.com/CurLeaf/dsh-command-rea#readme",
+  "bugs": {
+    "url": "https://github.com/CurLeaf/dsh-command-rea/issues"
+  },
   "keywords": [
     "dsh",
     "dsh-plugin",
