@@ -47,13 +47,26 @@ That keeps checkout and registry installs loading identically.
 |---|---|
 | name | `rea` |
 | definitionId | `dsh-command-rea` |
+| title | 逆向分析 |
+| icon | `IconInspectOutlineRegular` |
 | description | 用 REA 逆向分析目标 |
 | input hint | `<目标路径或问题>` |
 | attachments | accepted |
 
-The menu row shows the catalog description and the `rea` name; first-party
-localized titles and glyphs are chosen by the client for its own definition ids,
-so a third-party host command gets neither.
+`title` and `icon` are the command's own menu face: the Web client renders them
+as the row title and glyph, so `/rea` sits beside first-party rows instead of
+showing a bare `rea`. `icon` is an export name of
+`@deepseek-ai/dsh-client-ui-primitives`; an unknown name falls back to the
+generic plugin glyph. A definition that supplies neither still gets a row whose
+title is its description.
+
+Both fields need a Host that forwards them: `commands/list` must keep `title`
+and `icon` on the descriptor (`@deepseek-ai/dsh` 0.2.1-rc.3 does not — the local
+patch in this workspace's `research/dsh-command-face` adds the two fields to the
+Host registration, to both wire schemas, and to the menu row builder). On a
+Host release without that plumbing the fields are ignored and the row keeps the
+description-as-title fallback written above.
+
 
 ## Install
 

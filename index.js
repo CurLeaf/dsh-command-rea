@@ -70,6 +70,10 @@ export function apply(ctx) {
     yield ctx.commands.register({
       definitionId: DEFINITION_ID,
       name: 'rea',
+      // Menu face the client renders instead of the bare command name: the
+      // title becomes the row, the icon is a shared primitives export name.
+      title: '逆向分析',
+      icon: 'IconInspectOutlineRegular',
       description: '用 REA 逆向分析目标',
       // Free-form request, optionally accompanied by the targets it names.
       input: { hint: '<目标路径或问题>', attachments: true },
