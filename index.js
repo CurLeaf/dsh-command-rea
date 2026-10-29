@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { dirname, join, sep } from 'node:path'
 
 /**
  * `/rea <target or question>` — hand one reverse-engineering request to the
@@ -65,7 +67,38 @@ function composePrompt(task, attachmentCount) {
   return lines.join('\n')
 }
 
+/**
+ * Whether the running host carries the menu-face patch this package bundles.
+ *
+ * The host process is `.../@deepseek-ai/dsh/lib/bin.js`, so the client bundle it
+ * serves sits two levels up. Anything unexpected answers `undefined` and the
+ * caller stays quiet.
+ * @returns `'patched'`, `'unpatched'`, or `undefined` when the layout is unknown.
+ */
+function menuFacePatchState() {
+  try {
+    const entry = process.argv[1]
+    if (typeof entry !== 'string' || !entry.endsWith(`${sep}lib${sep}bin.js`)) return undefined
+    const client = join(
+      dirname(dirname(entry)),
+      'node_modules',
+      '@deepseek-ai',
+      'dsh-client-ui-commands',
+      'lib',
+      'client.js',
+    )
+    return readFileSync(client, 'utf8').includes('function declaredRowFace') ? 'patched' : 'unpatched'
+  } catch {
+    return undefined
+  }
+}
+
 export function apply(ctx) {
+  if (menuFacePatchState() === 'unpatched') {
+    console.warn(
+      '[dsh-command-rea] /rea has no menu face yet: run `dsh-command-rea-patch` (or `npx dsh-command-rea-patch`) once, then restart the web host.',
+    )
+  }
   ctx.effect(function* () {
     yield ctx.commands.register({
       definitionId: DEFINITION_ID,

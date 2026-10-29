@@ -1,6 +1,6 @@
 {
   "name": "dsh-command-rea",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "DSH slash command /rea: hand a reverse-engineering request to the reverse-engineer-anything skill and the REA MCP tools",
   "type": "module",
   "main": "index.js",
@@ -11,9 +11,19 @@
   "files": [
     "index.js",
     "cordis.patch.yml",
+    "lib/",
+    "bin/",
+    "dsh-patch/",
     "README.md",
     "LICENSE"
   ],
+  "bin": {
+    "dsh-command-rea-patch": "bin/dsh-command-rea-patch.js"
+  },
+  "scripts": {
+    "postinstall": "node bin/dsh-command-rea-patch.js --postinstall",
+    "test": "node --test"
+  },
   "engines": {
     "node": ">=20.9.0"
   },
