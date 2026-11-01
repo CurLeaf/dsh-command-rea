@@ -1,3 +1,5 @@
+> **这个仓库已归档**，源码移到 [CurLeaf/dsh-plugins](https://github.com/CurLeaf/dsh-plugins) 的 `packages/dsh-command-rea/`，npm 包名不变，仍随它一起发版。
+
 # dsh-command-rea
 
 A tiny DeepSeek Harness host plugin that registers `/rea` in the Web/TUI command
