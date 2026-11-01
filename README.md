@@ -68,6 +68,18 @@ plumbing the fields are ignored and the row keeps the description-as-title
 fallback written above.
 
 
+## The / menu face
+
+`/rea` 的标题「逆向分析」、图标 `IconInspectOutlineRegular` 和说明「用 REA 逆向分析目标」
+由**客户端半边**（`lib/client.js`）提供，不依赖下面的补丁：
+
+- 客户端模块在运行时包一层 `commandUi.candidates`，只改 `rea` 那一行，补 `label` / `description` / `icon`
+- 已带面孔的行原样放行，官方将来支持 `title`/`icon` 后自动让位
+- 取不到图标模块或 `commandUi` 时只降级成"少图标/少标题"，不影响命令执行，也不弄坏「/」菜单
+
+宿主侧 `register()` 里的 `title` / `icon` 仍然保留：它们现在是前向兼容字段，
+在支持这两列 Host 上会优先于客户端补丁。
+
 ## The bundled patch
 
 `@deepseek-ai/dsh` 0.2.1-rc.3 only gives a menu face to six first-party
